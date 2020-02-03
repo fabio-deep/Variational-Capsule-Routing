@@ -9,7 +9,7 @@ E-mail: [fdesousaribeiro@lincoln.ac.uk](mailto:fdesousaribeiro@lincoln.ac.uk)
 More stuff to be added soon.
 
 # Overview
-Modular **vb-routing** and **conv capsule** layers so you can stack to build your own capsnet to play around with.
+Modular **vb-routing** and **conv capsule** layers so you can stack them to build your own capsnet to play around with.
 
 ```python
 
