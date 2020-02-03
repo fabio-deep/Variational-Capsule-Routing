@@ -34,7 +34,7 @@ self.Routing = VariationalBayesRouting2d(in_caps=16, out_caps=5,
 **98.71%** with 3 caps layers (as in [paper](https://arxiv.org/pdf/1905.11455.pdf)).
 # Run
 ```
-$ python main.py
+$ python src/main.py
 ```
 # Dataset Download
 
