@@ -155,7 +155,7 @@ class VariationalBayesRouting2d(nn.Module):
             sigma_j = self.reduce_icaps(R_ij * (V_ji - mu_j).pow(2))
 
             # Out ← [?, 1, C, P*P, 1, F, F, 1, 1]
-            # self.invW_j = self.Psi0 + sigma_j + (self.kappa0*self.R_j / self.kappa_j) \
+            # self.invPsi_j = self.Psi0 + sigma_j + (self.kappa0*self.R_j / self.kappa_j) \
             #     * (mu_j - self.m0).pow(2) # use this if m0 != 0 or kappa0 != 1
             self.invPsi_j = self.Psi0 + sigma_j + (self.R_j / self.kappa_j) * (mu_j).pow(2) # priors removed for faster computation
 
