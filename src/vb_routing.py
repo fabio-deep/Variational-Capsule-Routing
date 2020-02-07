@@ -202,10 +202,10 @@ class VariationalBayesRouting2d(nn.Module):
                 Vm_j.transpose(3,4) * torch.inverse(
                     self.invPsi_j).permute(0,1,2,7,8,3,4,5,6) * Vm_j)
 
-        # Out ← [?, B, C, 1, 1, F, F, 1, 1]
+        # Out ← [?, B, C, 1, 1, F, F, K, K]
         lnp_j = .5*self.Elnlambda_j -.5*self.Dlog2pi -.5*ElnQ
 
-        # Out ← [?, B, C, 1, 1, F, F, 1, 1] # normalise over out_caps j
+        # Out ← [?, B, C, 1, 1, F, F, K, K] # normalise over out_caps j
         lnR_ij = lnp_j - torch.logsumexp(self.Elnpi_j + lnp_j, dim=2, keepdim=True)
         return torch.exp(lnR_ij)
 
