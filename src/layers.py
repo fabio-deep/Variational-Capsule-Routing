@@ -155,7 +155,7 @@ class ConvCapsules2d(nn.Module):
                 self.F = self.K # 1->4
 
             # coordinates = torch.arange(self.F, dtype=torch.float32) / self.F
-            coordinates = torch.arange(self.F, dtype=torch.float32).add(1.) / (self.F*100)
+            coordinates = torch.arange(self.F, dtype=torch.float32).add(1.) / (self.F*10)
             i_vals = torch.zeros(self.P*self.P,self.F,1).cuda()
             j_vals = torch.zeros(self.P*self.P,1,self.F).cuda()
             i_vals[self.P-1,:,0] = coordinates

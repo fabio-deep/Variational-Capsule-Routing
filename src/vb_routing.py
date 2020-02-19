@@ -6,6 +6,7 @@ import torch.nn.functional as F
 class VariationalBayesRouting2d(nn.Module):
     '''Variational Bayes Capsule Routing Layer'''
     def __init__(self, in_caps, out_caps, pose_dim,
+            kernel_size, stride,
             alpha0, # Dirichlet
             m0, kappa0, # Gaussian
             Psi0, nu0, # Wishart
@@ -16,6 +17,8 @@ class VariationalBayesRouting2d(nn.Module):
         self.C = out_caps
         self.P = pose_dim
         self.D = np.max([2, self.P*self.P])
+        self.K = kernel_size
+        self.S = stride
 
         self.cov = cov # diag/full
         self.iter = iter # routing iters
@@ -60,6 +63,10 @@ class VariationalBayesRouting2d(nn.Module):
             self.D*torch.log(torch.tensor(2.)).type(torch.FloatTensor))
         self.register_buffer('Dlog2pi',
             self.D*torch.log(torch.tensor(2.*np.pi)).type(torch.FloatTensor))
+
+        # Out ← [K*K, 1, K, K] vote collecting filter
+        self.register_buffer('filter',
+            torch.eye(self.K*self.K).reshape(self.K*self.K,1,self.K,self.K))
 
         # Out ← [1, 1, C, 1, 1, 1, 1, 1, 1] optional params
         self.beta_u = nn.Parameter(torch.zeros(1,1,self.C,1,1,1,1,1,1))
@@ -155,7 +162,7 @@ class VariationalBayesRouting2d(nn.Module):
             sigma_j = self.reduce_icaps(R_ij * (V_ji - mu_j).pow(2))
 
             # Out ← [?, 1, C, P*P, 1, F, F, 1, 1]
-            # self.invPsi_j = self.Psi0 + sigma_j + (self.kappa0*self.R_j / self.kappa_j) \
+            # self.invW_j = self.Psi0 + sigma_j + (self.kappa0*self.R_j / self.kappa_j) \
             #     * (mu_j - self.m0).pow(2) # use this if m0 != 0 or kappa0 != 1
             self.invPsi_j = self.Psi0 + sigma_j + (self.R_j / self.kappa_j) * (mu_j).pow(2) # priors removed for faster computation
 
@@ -205,9 +212,24 @@ class VariationalBayesRouting2d(nn.Module):
         # Out ← [?, B, C, 1, 1, F, F, K, K]
         lnp_j = .5*self.Elnlambda_j -.5*self.Dlog2pi -.5*ElnQ
 
+        # Out ← [?, B, C, 1, 1, F, F, K, K]
+        p_j = torch.exp(self.Elnpi_j + lnp_j)
+
+        # Out ← [?*B, 1, F', F'] ← [?*B, K*K, F, F] ← [?, B, 1, 1, 1, F, F, K, K]
+        sum_p_j = F.conv_transpose2d(
+            input=p_j.sum(dim=2, keepdim=True).reshape(
+                -1, *self.F_o, self.K*self.K).permute(0, -1, 1, 2),
+            weight=self.filter,
+            stride=[self.S, self.S])
+
+        # Out ← [?*B, 1, F, F, K, K]
+        sum_p_j = sum_p_j.unfold(2, size=self.K, step=self.S).unfold(3, size=self.K, step=self.S)
+
+        # Out ← [?, B, 1, 1, 1, F, F, K, K]
+        sum_p_j = sum_p_j.reshape([-1, self.B, 1, 1, 1, *self.F_o, self.K, self.K])
+
         # Out ← [?, B, C, 1, 1, F, F, K, K] # normalise over out_caps j
-        lnR_ij = lnp_j - torch.logsumexp(self.Elnpi_j + lnp_j, dim=2, keepdim=True)
-        return torch.exp(lnR_ij)
+        return 1. / torch.clamp(sum_p_j, min=1e-8) * p_j
 
     def reduce_icaps(self, x):
         return x.sum(dim=(1,-2,-1), keepdim=True)

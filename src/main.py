@@ -116,7 +116,7 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataset', default='smallnorb')
-    parser.add_argument('--n_epochs', type=int, default=150)
+    parser.add_argument('--n_epochs', type=int, default=300)
     parser.add_argument('--batch_size', type=int, default=64)
     parser.add_argument('--learning_rate', type=float, default=1e-3)
     parser.add_argument('--weight_decay', type=float, default=0)
@@ -127,7 +127,7 @@ if __name__ == '__main__':
     parser.add_argument('--contrast', type=float, default=0)
     parser.add_argument('--patience', default=1e+4)
     parser.add_argument('--crop_dim', type=int, default=32)
-    parser.add_argument('--arch', nargs='+', type=int, default=[64,32,5]) # architecture n caps
+    parser.add_argument('--arch', nargs='+', type=int, default=[64,8,16,16,5]) # architecture n caps
     parser.add_argument('--load_checkpoint_dir', default='NA')
     parser.add_argument('--inference', dest='inference', action='store_true')
     parser.add_argument('--test_affnist', dest='test_affNIST', action='store_true')
