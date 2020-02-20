@@ -139,9 +139,6 @@ def mnist(args, dataset_paths):
         n_classes=args.arch[-1],
         n_samples_per_class=np.repeat(500, args.arch[-1])) # 500 per class
 
-    print(datasets['train'].data.type)
-    # print(data['train'].type)
-
     # define transforms for train set (without valid data)
     transf['train_'] = transforms.Compose([
                 transforms.ToPILImage(),
