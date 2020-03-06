@@ -30,7 +30,7 @@ def smallnorb(args, dataset_paths):
     # return data, labels dicts for new train set and class-balanced valid set
     data, labels = random_split(data=datasets['train'].data,
         labels=datasets['train'].labels,
-        n_classes=args.arch[-1],
+        n_classes=5,
         n_samples_per_class=np.unique(
             datasets['train'].labels, return_counts=True)[1] // 5) # % of train set per class
 
@@ -110,7 +110,6 @@ class smallNORB(Dataset):
         return self.data.shape[0]
 
     def __getitem__(self, idx):
-
         if self.transform:
             image = self.transform(self.data[idx])
 
@@ -136,8 +135,8 @@ def mnist(args, dataset_paths):
     # split train into train and class-balanced valid set
     data, labels = random_split(data=datasets['train'].data,
         labels=datasets['train'].targets,
-        n_classes=args.arch[-1],
-        n_samples_per_class=np.repeat(500, args.arch[-1])) # 500 per class
+        n_classes=10,
+        n_samples_per_class=np.repeat(500, 10)) # 500 per class
 
     # define transforms for train set (without valid data)
     transf['train_'] = transforms.Compose([

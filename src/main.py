@@ -11,9 +11,9 @@ from datasets import *
 warnings.filterwarnings("ignore")
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
-torch.backends.cudnn.enabled=True
+torch.backends.cudnn.enabled = True
 torch.backends.cudnn.benchmark = True
-#torch.backends.cudnn.deterministic = True
+# torch.backends.cudnn.deterministic = True
 
 seed = 666
 random.seed(seed)
@@ -23,7 +23,9 @@ torch.cuda.manual_seed(seed)
 torch.cuda.manual_seed_all(seed)
 
 def main(args):
+
     ''' --------------------------- LOAD DATA -------------------------------'''
+
     if args.dataset == 'smallnorb':
         dataset = 'smallNORB_48'
         working_dir = os.path.join(os.path.split(os.getcwd())[0], 'data', dataset)
@@ -33,7 +35,7 @@ def main(args):
         dataloaders = smallnorb(args, dataset_paths)
 
         args.class_names = ('car', 'animal', 'truck', 'airplane', 'human') # 0,1,2,3,4 labels
-        args.n_channels = 2
+        args.n_channels, args.n_classes = 2, 5
 
     elif args.dataset == 'mnist':
         dataset = 'MNIST'
@@ -45,9 +47,13 @@ def main(args):
 
         args.class_names = ('zero', 'one', 'two', 'three', 'four',
             'five', 'six', 'seven', 'eight', 'nine') # 0,1,2,3,4,5,6,7,8,9 labels
-        args.n_channels = 1
+        args.n_channels, args.n_classes = 1, 10
+
+    assert args.arch[-1] == args.n_classes, \
+        'Set number of capsules in last layer to number of classes.'
 
     ''''----------------------- EXPERIMENT CONFIG ---------------------------'''
+
     # check number of models already saved in 'experiments' dir, add 1 to get new model number
     experiments_dir = os.path.join(os.path.split(os.getcwd())[0], 'experiments')
     os.makedirs(experiments_dir, exist_ok=True)
@@ -74,6 +80,7 @@ def main(args):
             logging.StreamHandler()])
 
     ''' -------------------------- INIT MODEL -------------------------------'''
+
     model = CapsuleNet(args)
 
     if torch.cuda.device_count() > 1:
@@ -104,6 +111,7 @@ def main(args):
         logging.info('--{0}: {1}'.format(str(key), str(value)))
 
     ''' ---------------------- TRAIN/EVALUATE MODEL -------------------------'''
+
     if not args.inference:
         args.writer = SummaryWriter(args.summaries_dir) # initialise summary writer
         score = train(model, dataloaders, args)
@@ -114,6 +122,7 @@ def main(args):
         print('Test: Loss {:.4f} - Acc. {:.4f}'.format(test_loss, test_acc))
 
 if __name__ == '__main__':
+
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataset', default='smallnorb')
     parser.add_argument('--n_epochs', type=int, default=300)
@@ -135,4 +144,3 @@ if __name__ == '__main__':
     parser.set_defaults(test_affNIST=False)
 
     score = main(parser.parse_known_args()[0])
-    args = parser.parse_known_args()[0]

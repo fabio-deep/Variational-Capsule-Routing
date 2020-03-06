@@ -218,7 +218,7 @@ class VariationalBayesRouting2d(nn.Module):
         # Out ← [?*B, 1, F', F'] ← [?*B, K*K, F, F] ← [?, B, 1, 1, 1, F, F, K, K]
         sum_p_j = F.conv_transpose2d(
             input=p_j.sum(dim=2, keepdim=True).reshape(
-                -1, *self.F_o, self.K*self.K).permute(0, -1, 1, 2),
+                -1, *self.F_o, self.K*self.K).permute(0, -1, 1, 2).contiguous(),
             weight=self.filter,
             stride=[self.S, self.S])
 
@@ -229,7 +229,7 @@ class VariationalBayesRouting2d(nn.Module):
         sum_p_j = sum_p_j.reshape([-1, self.B, 1, 1, 1, *self.F_o, self.K, self.K])
 
         # Out ← [?, B, C, 1, 1, F, F, K, K] # normalise over out_caps j
-        return 1. / torch.clamp(sum_p_j, min=1e-8) * p_j
+        return 1. / torch.clamp(sum_p_j, min=1e-11) * p_j
 
     def reduce_icaps(self, x):
         return x.sum(dim=(1,-2,-1), keepdim=True)

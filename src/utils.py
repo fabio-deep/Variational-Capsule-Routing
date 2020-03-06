@@ -5,9 +5,11 @@ from torch.utils.data import Dataset
 class CustomDataset(Dataset):
     """ Creates a custom pytorch dataset, mainly
         used for creating validation set splits. """
-    def __init__(self, data, labels, transform):
+    def __init__(self, data, labels, transform=None):
         # shuffle the dataset
         idx = np.random.permutation(data.shape[0])
+        if isinstance(data, torch.Tensor):
+            data = data.numpy() # to work with `ToPILImage'
         self.data = data[idx]
         self.labels = labels[idx]
         self.transform = transform
@@ -16,17 +18,9 @@ class CustomDataset(Dataset):
         return self.data.shape[0]
 
     def __getitem__(self, idx):
-        return self.transform(self.data[idx]), self.labels[idx]
-
-class Standardize(object):
-    """ Standardizes a 'PIL Image' such that each channel
-        gets zero mean and unit variance. """
-    def __call__(self, img):
-        return (img - img.mean(dim=(1,2), keepdim=True)) \
-            / torch.clamp(img.std(dim=(1,2), keepdim=True), min=1e-8)
-
-    def __repr__(self):
-        return self.__class__.__name__ + '()'
+        if self.transform:
+            image = self.transform(self.data[idx])
+        return image, self.labels[idx]
 
 def random_split(data, labels, n_classes, n_samples_per_class):
     """ Creates a class-balanced validation set from a training set. """
@@ -55,3 +49,13 @@ def random_split(data, labels, n_classes, n_samples_per_class):
                 'valid': torch.from_numpy(np.stack(valid_X))}, \
             {'train': torch.from_numpy(np.stack(train_Y)), \
              'valid': torch.from_numpy(np.stack(valid_Y))}
+
+class Standardize(object):
+    """ Standardizes a 'PIL Image' such that each channel
+        gets zero mean and unit variance. """
+    def __call__(self, img):
+        return (img - img.mean(dim=(1,2), keepdim=True)) \
+            / torch.clamp(img.std(dim=(1,2), keepdim=True), min=1e-8)
+
+    def __repr__(self):
+        return self.__class__.__name__ + '()'

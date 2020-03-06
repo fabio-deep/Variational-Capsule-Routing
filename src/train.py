@@ -35,8 +35,8 @@ def train(model, dataloaders, args):
             args.step = (epoch * len(dataloaders['train'])) + i + 1
 
             labels = labels.type(torch.LongTensor)
-            onehot_labels = torch.zeros(labels.size(0),
-                args.n_classes).scatter_(1, labels.view(-1, 1), 1).cuda()
+            # onehot_labels = torch.zeros(labels.size(0),
+            #     args.n_classes).scatter_(1, labels.view(-1, 1), 1).cuda()
             inputs = inputs.type(torch.FloatTensor).cuda()
 
             optimiser.zero_grad()

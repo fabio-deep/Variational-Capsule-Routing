@@ -76,8 +76,8 @@ class ConvCapsules2d(nn.Module):
         self.share_W_ij = share_W_ij # share the transformation matrices across (F*F)
         self.coor_add = coor_add # embed coordinates
 
-        # Out ← [B, C, 1, P, P, 1, 1, K, K]
-        self.W_ij = torch.empty(self.B, self.C, 1, self.P, self.P, 1, 1, self.K, self.K)
+        # Out ← [1, B, C, 1, P, P, 1, 1, K, K]
+        self.W_ij = torch.empty(1, self.B, self.C, 1, self.P, self.P, 1, 1, self.K, self.K)
 
         if weight_init.split('_')[0] == 'xavier':
             fan_in = self.B * self.K*self.K * self.PP # in_caps types * receptive field size
@@ -108,12 +108,12 @@ class ConvCapsules2d(nn.Module):
                 raise NotImplementedError('{} not implemented.'.format(weight_init))
 
         elif weight_init == 'noisy_identity' and self.PP > 2:
-            b = .01 # U(0,b)
-            # Out ← [B, C, 1, P, P, 1, 1, K, K]
-            self.W_ij = nn.Parameter(torch.clamp(torch.eye(self.P,self.P).repeat( \
-                self.B, self.C, 1, 1, 1, self.K, self.K, 1, 1) + \
-                torch.empty(self.B, self.C, 1, 1, 1, self.K, self.K, self.P, self.P).uniform_(0,b), \
-                max=1).permute(0, 1, 2, -2, -1, 3, 4, 5, 6))
+            b = 0.01 # U(0,b)
+            # Out ← [1, B, C, 1, P, P, 1, 1, K, K]
+            self.W_ij = nn.Parameter(torch.clamp(.1*torch.eye(self.P,self.P).repeat( \
+                1, self.B, self.C, 1, 1, 1, self.K, self.K, 1, 1) + \
+                torch.empty(1, self.B, self.C, 1, 1, 1, self.K, self.K, self.P, self.P).uniform_(0,b), \
+                max=1).permute(0, 1, 2, 3, -2, -1, 4, 5, 6, 7))
         else:
             raise NotImplementedError('{} not implemented.'.format(weight_init))
 
@@ -144,8 +144,8 @@ class ConvCapsules2d(nn.Module):
         # Out ← [?, B, 1, 1, 1, F', F', K, K] ← [?, B, F', F', K, K]
         activations = activations.reshape(-1, self.B, 1, 1, 1, *activations.shape[2:4], self.K, self.K)
 
-        # Out ← [?, B, C, P, P, F', F', K, K] ← ([?, B, 1, P, P, 1, F', F', K, K] * [?, B, C, 1, P, P, 1, 1, K, K])
-        V_ji = (poses * self.W_ij).sum(dim=3) # matmul equiv.
+        # Out ← [?, B, C, P, P, F', F', K, K] ← ([?, B, 1, P, P, 1, F', F', K, K] * [1, B, C, 1, P, P, 1, 1, K, K])
+        V_ji = (poses * self.W_ij).sum(dim=4) # matmul equiv.
 
         # Out ← [?, B, C, P*P, 1, F', F', K, K] ← [?, B, C, P, P, F', F', K, K]
         V_ji = V_ji.reshape(-1, self.B, self.C, self.P*self.P, 1, *V_ji.shape[-4:-2], self.K, self.K)
