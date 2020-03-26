@@ -49,8 +49,21 @@ def main(args):
             'five', 'six', 'seven', 'eight', 'nine') # 0,1,2,3,4,5,6,7,8,9 labels
         args.n_channels, args.n_classes = 1, 10
 
+    elif args.dataset == 'svhn':
+        dataset = 'SVHN'
+        working_dir = os.path.join(os.path.split(os.getcwd())[0], 'data', dataset)
+        dataset_paths = {'train': os.path.join(working_dir,'train'),
+                         #'extra': os.path.join(working_dir,'extra'),
+                         'test':  os.path.join(working_dir,'test')}
+
+        dataloaders = svhn(args, dataset_paths)
+
+        args.class_names = ('zero', 'one', 'two', 'three',
+            'four', 'five', 'six', 'seven', 'eight', 'nine') # 0,1,2,3,4,5,6,7,8,9 labels
+        args.n_channels, args.n_classes = 3, 10
+
     assert args.arch[-1] == args.n_classes, \
-        'Set number of capsules in last layer to number of classes.'
+        'Set number of capsules in last layer to number of classes using --arch flag.'
 
     ''''----------------------- EXPERIMENT CONFIG ---------------------------'''
 
@@ -126,7 +139,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataset', default='smallnorb')
     parser.add_argument('--n_epochs', type=int, default=300)
-    parser.add_argument('--batch_size', type=int, default=64)
+    parser.add_argument('--batch_size', type=int, default=128)
     parser.add_argument('--learning_rate', type=float, default=1e-3)
     parser.add_argument('--weight_decay', type=float, default=0)
     parser.add_argument('--routing_iter', type=int, default=3)

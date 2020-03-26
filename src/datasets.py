@@ -5,7 +5,7 @@ import scipy.io as sio
 
 from utils import *
 from torchvision import transforms
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader, Dataset, WeightedRandomSampler
 
 def smallnorb(args, dataset_paths):
 
@@ -116,7 +116,9 @@ class smallNORB(Dataset):
         return image, self.labels[idx] # (X, Y)
 
 def mnist(args, dataset_paths):
-
+    ''' Loads the MNIST dataset.
+        Returns: train/valid/test set split dataloaders.
+    '''
     transf = {'train': transforms.Compose([
                 transforms.RandomCrop((args.crop_dim, args.crop_dim), padding=args.padding),
                 transforms.ToTensor(),
@@ -183,6 +185,102 @@ def mnist(args, dataset_paths):
             transform=aff_transf)
         dataloaders['affNIST_test'] = DataLoader(datasets['affNIST_test'], pin_memory=True,
             num_workers=8, batch_size=args.batch_size, shuffle=False)
+
+    return dataloaders
+
+def svhn(args, dataset_paths):
+    ''' Loads the SVHN dataset.
+        Returns: train/valid/test set split dataloaders.
+    '''
+    transf = {
+        'train': transforms.Compose([
+            transforms.RandomCrop((args.crop_dim, args.crop_dim), padding=args.padding),
+            transforms.ColorJitter(brightness=args.brightness, contrast=args.contrast),
+            transforms.ToTensor(),
+            # Standardize()]),
+            transforms.Normalize((0.4376821, 0.4437697, 0.47280442),
+                                 (0.19803012, 0.20101562, 0.19703614))]),
+        # 'extra': transforms.Compose([
+        #     transforms.RandomCrop((args.crop_dim, args.crop_dim), padding=args.padding),
+        #     transforms.ColorJitter(brightness=args.brightness, contrast=args.contrast),
+        #     transforms.ToTensor(),
+        #     # Standardize()]),
+        #     transforms.Normalize((0.4376821, 0.4437697, 0.47280442),
+        #                          (0.19803012, 0.20101562, 0.19703614)),
+        'test': transforms.Compose([
+            transforms.ToTensor(),
+            # Standardize()])}
+            transforms.Normalize((0.4376821, 0.4437697, 0.47280442),
+                                 (0.19803012, 0.20101562, 0.19703614))])
+    }
+
+    # config = {'train': True, 'extra': True, 'test': False}
+    config = {'train': True, 'test': False}
+    datasets = {i: torchvision.datasets.SVHN(root=dataset_paths[i], transform=transf[i],
+                        split=i, download=True) for i in config.keys()}
+
+    # weighted sampler weights for full(f) training set
+    f_s_weights = sample_weights(datasets['train'].labels)
+
+    # return data, labels dicts for new train set and class-balanced valid set
+    data, labels = random_split(data=datasets['train'].data,
+                                labels=datasets['train'].labels,
+                                n_classes=10,
+                                n_samples_per_class=np.repeat(1000, 10).reshape(-1))
+
+    # define transforms for train set (without valid data)
+    transf['train_'] = transforms.Compose([
+        transforms.ToPILImage(),
+        transforms.RandomCrop((args.crop_dim, args.crop_dim), padding=args.padding),
+        transforms.ColorJitter(brightness=args.brightness, contrast=args.contrast),
+        transforms.ToTensor(),
+        # Standardize()])
+        transforms.Normalize((0.4376821, 0.4437697, 0.47280442),
+                             (0.19803012, 0.20101562, 0.19703614))])
+
+    # define transforms for class-balanced valid set
+    transf['valid'] = transforms.Compose([
+        transforms.ToPILImage(),
+        transforms.ToTensor(),
+        # Standardize()])
+        transforms.Normalize((0.4376821, 0.4437697, 0.47280442),
+                             (0.19803012, 0.20101562, 0.19703614))])
+
+    # save original full training set
+    datasets['train_valid'] = datasets['train']
+
+    # make channels last and convert to np arrays
+    data['train'] = np.moveaxis(np.array(data['train']), 1, -1)
+    data['valid'] = np.moveaxis(np.array(data['valid']), 1, -1)
+
+    # make new training set without validation samples
+    datasets['train'] = CustomDataset(data=data['train'],
+                                      labels=labels['train'], transform=transf['train_'])
+
+    # make class balanced validation set
+    datasets['valid'] = CustomDataset(data=data['valid'],
+                                      labels=labels['valid'], transform=transf['valid'])
+
+    # weighted sampler weights for new training set
+    s_weights = sample_weights(datasets['train'].labels)
+
+    config = {
+        'train': WeightedRandomSampler(s_weights,
+                                       num_samples=len(s_weights), replacement=True),
+        'train_valid': WeightedRandomSampler(f_s_weights,
+                                             num_samples=len(f_s_weights), replacement=True),
+        'valid': None, 'test': None}
+
+    dataloaders = {i: DataLoader(datasets[i], sampler=config[i],
+                                 num_workers=8, pin_memory=True, drop_last=True,
+                                 batch_size=args.batch_size) for i in config.keys()}
+
+    #NOTE: comment these to use the weighted sampler dataloaders above instead
+    config = {'train': True, 'train_valid': True,
+        'valid': False, 'test': False}
+
+    dataloaders = {i: DataLoader(datasets[i], num_workers=8, pin_memory=True,
+        batch_size=args.batch_size, shuffle=config[i]) for i in config.keys()}
 
     return dataloaders
 

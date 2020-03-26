@@ -59,3 +59,9 @@ class Standardize(object):
 
     def __repr__(self):
         return self.__class__.__name__ + '()'
+
+def sample_weights(labels):
+    """ Calculates per sample weights. """
+    class_sample_count = np.unique(labels, return_counts=True)[1]
+    class_weights = 1. / torch.Tensor(class_sample_count)
+    return class_weights[list(map(int, labels))]
