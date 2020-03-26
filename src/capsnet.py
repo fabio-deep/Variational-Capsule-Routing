@@ -47,7 +47,7 @@ class CapsuleNet(nn.Module):
             kernel_size=1, stride=1, pose_dim=self.P, share_W_ij=True, coor_add=True)
 
         self.ClassRouting = VariationalBayesRouting2d(in_caps=self.D, out_caps=self.n_classes,
-            kernel_size=4, stride=1, pose_dim=self.P,
+            kernel_size=4, stride=1, pose_dim=self.P, # adjust final kernel_size K depending on input H/W, for H=W=32, K=4.
             cov='diag', iter=args.routing_iter,
             alpha0=1., m0=torch.zeros(self.D), kappa0=1.,
             Psi0=torch.eye(self.D), nu0=self.D+1, class_caps=True)
