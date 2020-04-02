@@ -32,7 +32,7 @@ self.Routing = VariationalBayesRouting2d(in_caps=16, out_caps=5,
 
 **97.1%** test acc on smallNORB with just 1 caps layer. \
 **98.7%** with 3 caps layers (as in [paper](https://arxiv.org/pdf/1905.11455.pdf)).
-For more see `images/Poster_AAAI2020.pdf`.
+For more [see the poster](https://github.com/fabio-deep/Variational-Capsule-Routing/blob/master/images/Poster_AAAI2020.pdf) in `images/Poster_AAAI2020.pdf`.
 ## Run
 ```
 python src/main.py
