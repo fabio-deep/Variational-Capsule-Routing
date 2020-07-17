@@ -3,7 +3,7 @@
 
 [Official Pytorch implementation]
 
-Examplary code for our AAAI 2020 [paper](https://arxiv.org/pdf/1905.11455.pdf) on capsule networks.
+Examplary code for our AAAI 2020 [paper](https://aaai.org/ojs/index.php/AAAI/article/view/5785/5641) on capsule networks.
 
 **Author**: Fabio De Sousa Ribeiro \
 **E-mail**: [fdesousaribeiro@lincoln.ac.uk](mailto:fdesousaribeiro@lincoln.ac.uk)
