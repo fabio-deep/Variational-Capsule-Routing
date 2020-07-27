@@ -43,10 +43,8 @@ python src/main.py
 
 ### Citation
 ```
-@article{ribeiro2019capsule,
-  title={Capsule routing via variational bayes},
-  author={Ribeiro, Fabio De Sousa and Leontidis, Georgios and Kollias, Stefanos},
-  journal={arXiv preprint arXiv:1905.11455},
-  year={2019}
+@inproceedings{ribeiro2020capsule,
+  title={Capsule Routing via Variational Bayes.},
+  author={Ribeiro, Fabio De Sousa and Leontidis, Georgios and Kollias, Stefanos D}
 }
 ```
