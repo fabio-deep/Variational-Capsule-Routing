@@ -45,6 +45,9 @@ python src/main.py
 ```
 @inproceedings{ribeiro2020capsule,
   title={Capsule Routing via Variational Bayes.},
-  author={Ribeiro, Fabio De Sousa and Leontidis, Georgios and Kollias, Stefanos D}
+  author={Ribeiro, Fabio De Sousa and Leontidis, Georgios and Kollias, Stefanos D},
+  booktitle={AAAI},
+  pages={3749--3756},
+  year={2020}
 }
 ```
