@@ -12,7 +12,7 @@ class CapsuleNet(nn.Module):
         super(CapsuleNet, self).__init__()
 
         self.P = args.pose_dim
-        self.D = int(np.max([2, self.P*self.P]))
+        self.PP = int(np.max([2, self.P*self.P]))
         self.A, self.B, self.C, self.D = args.arch[:-1]
         self.n_classes = args.n_classes = args.arch[-1]
         self.in_channels = args.n_channels
@@ -31,8 +31,8 @@ class CapsuleNet(nn.Module):
         self.ConvRouting_1 = VariationalBayesRouting2d(in_caps=self.B, out_caps=self.C,
             kernel_size=3, stride=2, pose_dim=self.P,
             cov='diag', iter=args.routing_iter,
-            alpha0=1., m0=torch.zeros(self.D), kappa0=1.,
-            Psi0=torch.eye(self.D), nu0=self.D+1)
+            alpha0=1., m0=torch.zeros(self.self.PP), kappa0=1.,
+            Psi0=torch.eye(self.self.PP), nu0=self.self.PP+1)
 
         self.ConvCaps_2 = ConvCapsules2d(in_caps=self.C, out_caps=self.D,
             kernel_size=3, stride=1, pose_dim=self.P)
@@ -40,8 +40,8 @@ class CapsuleNet(nn.Module):
         self.ConvRouting_2 = VariationalBayesRouting2d(in_caps=self.C, out_caps=self.D,
             kernel_size=3, stride=1, pose_dim=self.P,
             cov='diag', iter=args.routing_iter,
-            alpha0=1., m0=torch.zeros(self.D), kappa0=1.,
-            Psi0=torch.eye(self.D), nu0=self.D+1)
+            alpha0=1., m0=torch.zeros(self.self.PP), kappa0=1.,
+            Psi0=torch.eye(self.self.PP), nu0=self.self.PP+1)
 
         self.ClassCaps = ConvCapsules2d(in_caps=self.D, out_caps=self.n_classes,
             kernel_size=1, stride=1, pose_dim=self.P, share_W_ij=True, coor_add=True)
@@ -49,8 +49,8 @@ class CapsuleNet(nn.Module):
         self.ClassRouting = VariationalBayesRouting2d(in_caps=self.D, out_caps=self.n_classes,
             kernel_size=4, stride=1, pose_dim=self.P, # adjust final kernel_size K depending on input H/W, for H=W=32, K=4.
             cov='diag', iter=args.routing_iter,
-            alpha0=1., m0=torch.zeros(self.D), kappa0=1.,
-            Psi0=torch.eye(self.D), nu0=self.D+1, class_caps=True)
+            alpha0=1., m0=torch.zeros(self.self.PP), kappa0=1.,
+            Psi0=torch.eye(self.PP), nu0=self.self.PP+1, class_caps=True)
 
     def forward(self, x):
 
