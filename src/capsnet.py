@@ -83,7 +83,7 @@ class CapsuleNet(nn.Module):
 class tinyCapsuleNet(nn.Module):
     ''' Example: Simple 1 layer CapsNet '''
     def __init__(self, args):
-        super(CapsuleNet, self).__init__()
+        super(tinyCapsuleNet, self).__init__()
 
         self.P = args.pose_dim
         self.D = int(np.max([2, self.P*self.P]))
